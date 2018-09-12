@@ -9,7 +9,7 @@
 ### 已实现模型
 - [x] 单线程/多线程 BIO 模型
 - [x] 单线程 Reactor
-- [ ] Reactor + 工作线程
+- [x] Reactor + 工作线程
 - [ ] 多线程 Reactor
 
 ### 参考
