@@ -12,13 +12,13 @@ import java.nio.file.Files;
 
 class SocketHandler {
 
-    void handle(Socket socket) throws IOException {
+    void handle(Socket socket, HttpRequestProcessor processor) throws IOException {
         byte[] bytes = new byte[10240];
         InputStream is = socket.getInputStream();
         int i = is.read(bytes);
         HttpRequest request = HttpRequest.parse(new String(bytes, 0, i));
         OutputStream outputStream = socket.getOutputStream();
-        HttpResponse response = HttpRequestProcessor.getInstance().build(request);
+        HttpResponse response = processor.process(request);
         outputStream.write(response.headerBytes());
         outputStream.write(Files.readAllBytes(response.getDocument()));
         outputStream.flush();

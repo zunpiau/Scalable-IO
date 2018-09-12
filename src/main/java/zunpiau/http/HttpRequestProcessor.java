@@ -2,6 +2,7 @@ package zunpiau.http;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import zunpiau.Config;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,32 +12,17 @@ import java.nio.file.Paths;
 
 public class HttpRequestProcessor {
 
-    private static HttpRequestProcessor instance;
     private final Path WEB_DIR;
     private final Path ERROR_PAGE_DIR;
     private final String HOMEPAGE_INDEX;
 
-    private HttpRequestProcessor(Path webDir, Path errorPageDir, String homepageIndex) {
-        WEB_DIR = webDir;
-        ERROR_PAGE_DIR = errorPageDir;
-        HOMEPAGE_INDEX = homepageIndex;
+    public HttpRequestProcessor(Config config) {
+        WEB_DIR = config.webapp;
+        ERROR_PAGE_DIR = config.errorPage;
+        HOMEPAGE_INDEX = config.homepageIndex;
     }
 
-    public static void createInstance(Path webDir, Path errorPageDir, String homepageIndex) {
-        if (instance == null)
-            instance = new HttpRequestProcessor(webDir, errorPageDir, homepageIndex);
-        else
-            throw new IllegalStateException("HttpRequestProcessor has been created");
-    }
-
-    public static HttpRequestProcessor getInstance() {
-        if (instance != null)
-            return instance;
-        else
-            throw new IllegalStateException("HttpRequestProcessor not yet created");
-    }
-
-    public HttpResponse build(HttpRequest request) throws IOException {
+    public HttpResponse process(HttpRequest request) throws IOException {
         Path path = Paths.get(WEB_DIR.toString(), request.getPath());
         if (path.compareTo(WEB_DIR) < 0) {
             return buildErrorResponse(HttpStatus.FORBIDDEN, new HttpHeaders());

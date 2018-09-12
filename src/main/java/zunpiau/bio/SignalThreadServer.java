@@ -1,6 +1,7 @@
 package zunpiau.bio;
 
-import zunpiau.ServerStarter;
+import zunpiau.Config;
+import zunpiau.http.HttpRequestProcessor;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,13 +9,11 @@ import java.net.Socket;
 
 public class SignalThreadServer implements Runnable {
 
+    private static HttpRequestProcessor processor;
+
     public static void main(String[] args) {
-        new ServerStarter() {
-            @Override
-            public Runnable start(Config config) {
-                return new SignalThreadServer();
-            }
-        }.start();
+        processor = new HttpRequestProcessor(new Config());
+        new Thread(new SignalThreadServer()).start();
     }
 
     @Override
@@ -25,7 +24,7 @@ public class SignalThreadServer implements Runnable {
             //noinspection InfiniteLoopStatement
             while (true) {
                 Socket socket = serverSocket.accept();
-                new SocketHandler().handle(socket);
+                new SocketHandler().handle(socket, processor);
             }
 
         } catch (IOException e) {
