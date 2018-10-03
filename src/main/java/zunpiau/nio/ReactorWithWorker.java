@@ -15,7 +15,7 @@ public class ReactorWithWorker extends BasicReactor {
 
     private final ExecutorService worker;
 
-    private ReactorWithWorker() throws IOException {
+    ReactorWithWorker() throws IOException {
         super();
         worker = Executors.newFixedThreadPool(4);
     }

@@ -11,23 +11,19 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.Iterator;
 
 /**
  * implement {@link BasicReactorDesign}
  */
-@SuppressWarnings("Duplicates")
-public class BasicReactor implements Runnable {
+public class BasicReactor extends Reactor {
 
     final HttpRequestProcessor processor;
-    private final Selector selector;
-    private final ServerSocketChannel serverSocketChannel;
+    final ServerSocketChannel serverSocketChannel;
 
     BasicReactor() throws IOException {
         Config config = new Config();
         processor = new HttpRequestProcessor(config);
 
-        selector = Selector.open();
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.bind(new InetSocketAddress(config.serverPort));
@@ -38,29 +34,8 @@ public class BasicReactor implements Runnable {
         new BasicReactor().run();
     }
 
-    @Override
-    public void run() {
-        try {
-            while (!Thread.interrupted()) {
-                selector.select();
-                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-                while (iterator.hasNext()) {
-                    SelectionKey selectionKey = iterator.next();
-                    dispatch(selectionKey);
-                    iterator.remove();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     Acceptor getAcceptor() {
         return new Acceptor();
-    }
-
-    private void dispatch(SelectionKey selectionKey) {
-        ((Runnable) selectionKey.attachment()).run();
     }
 
     class Acceptor implements Runnable {
@@ -93,6 +68,7 @@ public class BasicReactor implements Runnable {
             sender = new Sender();
             this.socketChannel = socketChannel;
             socketChannel.configureBlocking(false);
+            selector.wakeup();
             key = socketChannel.register(selector, 0);
             read();
             if (inputIsComplete()) {
