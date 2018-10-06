@@ -17,7 +17,7 @@ public class Reactor implements Runnable {
     public void run() {
         try {
             while (!Thread.interrupted()) {
-                selector.select();
+                doSelect();
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                 while (iterator.hasNext()) {
                     SelectionKey selectionKey = iterator.next();
@@ -30,8 +30,8 @@ public class Reactor implements Runnable {
         }
     }
 
-    Selector getSelector() {
-        return selector;
+    int doSelect() throws IOException {
+        return selector.select();
     }
 
     private void dispatch(SelectionKey selectionKey) {

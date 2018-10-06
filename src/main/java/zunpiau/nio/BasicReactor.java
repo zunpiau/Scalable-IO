@@ -40,18 +40,18 @@ public class BasicReactor extends Reactor {
 
     class Acceptor implements Runnable {
 
-        Handler getHandler(Selector selector, SocketChannel socketChannel) throws IOException {
-            return new Handler(selector, socketChannel);
-        }
-
         @Override
         public void run() {
             try {
                 SocketChannel socketChannel = serverSocketChannel.accept();
-                getHandler(selector, socketChannel);
+                getHandler(BasicReactor.this, socketChannel);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        Handler getHandler(Reactor reactor, SocketChannel socketChannel) throws IOException {
+            return new Handler(reactor, socketChannel);
         }
     }
 
@@ -63,23 +63,26 @@ public class BasicReactor extends Reactor {
         private final Sender sender;
         ByteBuffer input;
 
-        Handler(Selector selector, SocketChannel socketChannel) throws IOException {
+        Handler(Reactor reactor, SocketChannel socketChannel) throws IOException {
             input = ByteBuffer.allocate(64);
             sender = new Sender();
             this.socketChannel = socketChannel;
             socketChannel.configureBlocking(false);
-            selector.wakeup();
-            key = socketChannel.register(selector, 0);
+            key = registerChannel(reactor, socketChannel);
             read();
             if (inputIsComplete()) {
                 System.out.println(socketChannel + " read complete at accept");
                 onInputIsComplete();
             } else {
-                RegisterHandler();
+                registerHandler();
             }
         }
 
-        void RegisterHandler() {
+        protected SelectionKey registerChannel(Reactor reactor, SocketChannel socketChannel) throws ClosedChannelException {
+            return socketChannel.register(reactor.selector, 0);
+        }
+
+        void registerHandler() {
             key.attach(Handler.this);
             key.interestOps(SelectionKey.OP_READ);
             key.selector().wakeup();
@@ -220,7 +223,7 @@ public class BasicReactor extends Reactor {
             void onOutputComplete() {
                 System.out.println(socketChannel + " write completed");
                 cleanup();
-                RegisterHandler();
+                registerHandler();
             }
 
             private void cleanup() {

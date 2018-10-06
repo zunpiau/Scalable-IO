@@ -4,7 +4,6 @@ import zunpiau.http.HttpRequest;
 import zunpiau.http.HttpResponse;
 
 import java.io.IOException;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -32,15 +31,15 @@ public class ReactorWithWorker extends BasicReactor {
     class Acceptor extends BasicReactor.Acceptor {
 
         @Override
-        Handler getHandler(Selector selector, SocketChannel socketChannel) throws IOException {
-            return new Handler(selector, socketChannel);
+        Handler getHandler(Reactor reactor, SocketChannel socketChannel) throws IOException {
+            return new Handler(ReactorWithWorker.this, socketChannel);
         }
     }
 
-    public class Handler extends BasicReactor.Handler {
+    class Handler extends BasicReactor.Handler {
 
-        Handler(Selector selector, SocketChannel socketChannel) throws IOException {
-            super(selector, socketChannel);
+        Handler(Reactor reactor, SocketChannel socketChannel) throws IOException {
+            super(reactor, socketChannel);
         }
 
         void onInputIsComplete() {
